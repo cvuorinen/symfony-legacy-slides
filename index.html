@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>Tackling Technical Debt</title>
+
+        <meta name="description" content="Tackling technical debt – breathe new life into a legacy project with Symfony2">
+        <meta name="author" content="Carl Vuorinen">
+
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" href="css/reveal.min.css">
+        <!--<link rel="stylesheet" href="css/theme/default.css" id="theme">-->
+
+        <!-- My custom styles -->
+        <link rel="stylesheet" href="css/my-custom-styles.css">
+
+        <!-- For syntax highlighting -->
+        <link rel="stylesheet" href="lib/css/phpnet.css">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css?v=4.2.0">
+
+        <!-- If the query includes 'print-pdf', include the PDF print sheet -->
+        <script>
+            if( window.location.search.match( /print-pdf/gi ) ) {
+                var link = document.createElement( 'link' );
+                link.rel = 'stylesheet';
+                link.type = 'text/css';
+                link.href = 'css/print/pdf.css';
+                document.getElementsByTagName( 'head' )[0].appendChild( link );
+            }
+        </script>
+
+        <!--[if lt IE 9]>
+        <script src="lib/js/html5shiv.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+
+        <div class="reveal">
+
+            <!-- Any section element inside of this container is displayed as a slide -->
+            <div class="slides">
+                <section>
+                    <h1>Tackling Technical Debt</h1>
+                    <h2>&ndash; breathe new life into a legacy project with Symfony2</h2>
+                    <br><br><br><br>
+                    <h4>
+                        November Camp 14.11.2014
+                        <br><br>
+                        by <a href="http://cvuorinen.net" target="_blank">Carl Vuorinen</a> / 
+                        <a href="http://twitter.com/cvuorinen" target="_blank">@cvuorinen</a>
+                    </h4>
+                </section>
+
+                <section>
+                    <h1>Legacy</h1>
+                    <img src="img/thread.jpg" alt="">
+                    <div>Image by <a href="http://www.leunig.com.au/" target="_blank">Michael Leunig</a></div>
+                </section>
+<!--
+                <section class="block-exception">
+                    <div class="illustration-exception"></div>
+                    <div class="text-exception">
+                        <h2>Some Exception test</h2>
+                    </div>
+                </section>
+-->
+                <section>
+                    <h1>Full rewrite</h1>
+                    <br>
+                    <ul>
+                        <li>Costly &amp; risky</li>
+                        <li>Often fails</li>
+                        <li>Usually not an option</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1>Gradual migration</h1>
+                    <br>
+                    <ul>
+                        <li>Legacy &amp; Fullstack Symfony2 side by side</li>
+                        <li>Write new features on Symfony side</li>
+                        <li>Maintain old code on legacy side</li>
+                        <li>Gradually modernize and migrate old code to Symfony side</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1><em>Goals</em></h1>
+                    <br>
+                    <ul>
+                        <li>No "downgrade" or regressions</li>
+                        <li>Smoothly migrate old code over time</li>
+                        <li>End-user <strong>doesn't know there are two systems</strong> <br>
+                            or <strong>notice the difference between old and new</strong></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1><em>Objectives</em></h1>
+                    <br>
+                    <ul>
+                        <li>Same layout and UI</li>
+                        <li>Shared authentication
+                        <ul>
+                            <li>User only logs in once</li>
+                        </ul></li>
+                        <li>Shared configuration
+                        <ul>
+                            <li>Parameters only defined in one place</li>
+                        </ul></li>
+                        <li>Easy for developers to work with and deploy</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1>Introducing reference project</h1>
+                    <br>
+                    <ul>
+                        <li>About 12 years old
+                        <ul>
+                            <li class="fragment">Which is like 84 in Internet years!</li>
+                        </ul></li>
+                        <li class="fragment">Lots of different developers over the years</li>
+                        <li class="fragment">116 748 LOC</li>
+                        <li class="fragment">No tests</li>
+                        <li class="fragment">Let's look at some code</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>index.php "autoloader"</h2>
+                    <pre><code data-trim class="php">
+// Load configuration
+require_once ("config.php");
+require_once ("includes/funcs.php");
+require_once ("includes/common.php");
+
+// Load classes
+require_once ("classes/info.php");
+require_once ("classes/user.php");
+require_once ("classes/dir.php");
+// ... ~100 lines more
+                    </code></pre>
+                </section>
+
+                <section>
+                    <img src="img/include-all-the-things.jpg" alt="" width="600">
+                </section>
+
+                <section>
+                    <h2>index.php "router"</h2>
+                    <pre><code data-trim class="php">
+switch ($page) {
+    case "user":
+        $user = new User($user_id);
+
+        if ($action == 'edit') {
+            $body = $user->editUser();
+        } else {
+            $body = $user->userInfo();
+        }
+        break;
+    case "page2":
+        $heading = "Some page";
+        $body = get_some_page();
+        break;
+    // ... ~1500 lines more
+}</code></pre>
+                </section>
+
+                <section>
+                    <h2>Classes (A.K.A. God objects)</h2>
+                    <pre><code data-trim class="php">
+class User extends Db
+{
+    // inherits from Db (but sometimes overridden)
+    function save() {}
+    function delete() {}
+    function log() {}
+    function checkAccess() {}
+    function formTextInput() {}
+    function validateDate() {}
+    // ... lots more
+
+    function printMenu() {}
+    function printInfo() {}
+    function printUpdateForm() {}
+    // ... lots more
+}</code></pre>
+                </section>
+
+                <section>
+                    <h1>Alternatives</h1>
+                    <br>
+                    <ol>
+                        <li>Totally separate applications, using same database
+                        <ul>
+                            <li>Running on the same server, but different doc root</li>
+                            <li>Web server handles routing (subdomain etc.)</li>
+                        </ul></li>
+                        <li>Use Symfony components inside the legacy app</li>
+                        <li>Run legacy app through Symfony fullstack framework</li>
+                    </ol>
+
+                    <aside class="notes">
+                        <ol>
+                            <li>can use different versions of PHP, nginx has pretty good options for routing</li>
+                            <li>Requires some bootstrapping to get everything set up,
+                                might be OK if legacy app has a decent framework to begin with</li>
+                            <li>PHP upgrade if &lt; 5.3</li>
+                        </ol>
+                    </aside>
+                </section>
+
+                <section>
+                    <h1>Run legacy app through Symfony</h1>
+                    <br>
+                    <ul>
+                        <li>Write new features into Symfony bundles</li>
+                        <li>Forward non-Symfony routes to legacy app</li>
+                        <li>Integrate legacy app with Symfony
+                        <ul>
+                            <li>Use Symfony components in legacy app</li>
+                            <li>Use new code written in Symfony bundles in legacy app</li>
+                        </ul></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1>Forward non-Symfony routes to legacy app</h1>
+                    <br>
+                    <ul>
+                        <li>Use Symfony kernel events</li>
+                        <li>LegacyKernel + LegacyKernelListener</li>
+                        <li>Include legacy "front controller"</li>
+                        <li>Capture output and return in a Response object</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Legacy Request lifecycle</h2>
+                    <img src="img/symfony_legacykernellistener.png" alt="">
+                </section>
+
+                <section>
+                    <pre><code data-trim class="php">
+class LegacyKernel implements HttpKernelInterface
+{
+    public function handle(Request $request, ...)
+    {
+        ob_start();
+
+        $legacyDir = dirname($this->legacyAppPath);
+        chdir($legacyDir);
+
+        require_once $this->legacyAppPath;
+
+        $response = new Response(ob_get_clean());
+
+        return $response;
+    }
+}
+                    </code></pre>
+
+                    <aside class="notes">
+                        Caveats: <br>
+                        <ul>
+                            <li>Legacy globals scope (not global anymore)</li>
+                            <li>No die/exit allowed (if something needs to execute in Symfony side after LegacyKernel)</li>
+                        </ul>
+                    </aside>
+                </section>
+
+                <section>
+                    <pre><code data-trim class="php">
+class LegacyKernelListener implements EventSubscriberInterface
+{
+    public function onKernelException($event)
+    {
+        $exception = $event->getException();
+
+        if ($exception instanceof NotFoundHttpException) {
+            $request = $event->getRequest();
+            $response = $this->legacyKernel->handle($request);
+
+            // Override 404 status code with 200
+            $response->headers->set('X-Status-Code', 200);
+
+            $event->setResponse($response);
+        }
+    }
+}
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h1>Alternatives to LegacyKernel <br>&amp; LegacyKernelListener</h1>
+                    <br>
+                    <ul>
+                        <li>Try to include all 'filename.php' routes</li>
+                        <li>Whitelist all possible 'filename.php' routes</li>
+                        <li>Watch for certain GET param</li>
+                        <li>etc.</li>
+                    </ul>
+                    <br><br>
+                    <h2 class="fragment">LegacyController + "Catch All" route</h2>
+                </section>
+
+                <section>
+                    <pre><code data-trim class="php">
+class LegacyController extends Controller
+{
+    /**
+     * @Route("/{filename}.php", name="_legacy")
+     */
+    public function legacyAction($filename)
+    {
+        $legacyPath = $this->container
+                      ->getParameter('legacy.path');
+
+        ob_start();
+        chdir($legacyAppPath);
+        require_once $legacyAppPath . $filename . '.php';
+        $response = new Response(ob_get_clean());
+
+        return $response;
+    }
+}
+</code></pre>
+                </section>
+
+                <section>
+                    <h2>Test Route with <code>router:match</code></h2>
+                    <br>
+                    <pre class="shell">
+$ app/console router:match /index.php
+Route "_legacy" matches
+
+[router] Route "_legacy"
+Name         _legacy
+Path         /{filename}.php
+Host         ANY
+Scheme       ANY
+Method       ANY
+Class        Symfony\Component\Routing\Route
+Defaults     _controller: CvuorinenLegacyBundle:Legacy:legacy
+Requirements 
+Options      compiler_class: Symfony\Component\Routing\RouteCompiler
+Path-Regex   #^/(?P&lt;filename&gt;[^/\.]++)\.php$#s
+                    </pre>
+                </section>
+
+                <section>
+                    <h1>There's a bundle for that</h1>
+                    <br>
+                    <ul>
+                        <li class="repo-link">
+                        <i class="fa fa-book fa-lg"></i>
+                        <a href="https://github.com/Ingewikkeld">Ingewikkeld</a> / 
+                        <strong><a href="https://github.com/Ingewikkeld/IngewikkeldWrapperBundle">IngewikkeldWrapperBundle</a></strong>
+                        <ul>
+                            <li>For Symfony 1 projects</li>
+                        </ul><br></li>
+                        <li class="repo-link">
+                        <i class="fa fa-book fa-lg"></i>
+                        <a href="https://github.com/theodo">theodo</a> / 
+                        <strong><a href="https://github.com/theodo/TheodoEvolutionLegacyWrapperBundle">TheodoEvolutionLegacyWrapperBundle</a></strong>
+                        <ul>
+                            <li>For Symfony 1 &amp; CodeIgniter projects</li>
+                        </ul></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1>Integrate legacy app with Symfony</h1>
+                    <br>
+                    <ul>
+                        <li><em>Goal:</em> Use Symfony services in legacy app</li>
+                        <li>Assign <strong>Request &amp; Service Container</strong> <br>
+                            to a variable <strong>in legacy scope</strong></li>
+                        <li class="fragment">Get any Service or Parameter from the container in legacy app
+                        <ul>
+                            <li>Any Symfony component or Symfony framework built-in service</li>
+                            <li>Any custom service written in Symfony bundles</li>
+                        </ul></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <pre><code data-trim class="php">
+class LegacyKernel implements HttpKernelInterface
+{
+    public function handle(Request $request, ...)
+    {
+        // ...
+
+        // Assign Container to a local variable
+        // so it can be used in legacy app
+        $container = $this->container;
+        // Request is already in a local variable
+
+        require_once $this->legacyAppPath;
+
+        // ...
+    }
+}
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h1>Configuration</h1>
+                    <br>
+                    <ul>
+                        <li><em>Goal:</em> DRY (configuration defined in only one place)</li>
+                        <li>Move legacy configuration to Symfony <code>parameters.yml</code></li>
+                        <li>Get parameters from container in legacy side</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1>Version Control</h1>
+                    <br>
+                    <ul>
+                        <li><em>Goal:</em> easy to work with and deploy</li>
+                        <li>Different repos for Symfony app &amp; Legacy app</li>
+                        <li>Legacy in subdirectory as git submodule
+                        <ul>
+                            <li>OR</li>
+                        </ul></li>
+                        <li>Legacy as a composer dependency</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>composer.json</h2>
+                    <pre><code data-trim class="json">
+{
+    "require": {
+        ...
+        "cvuorinen/legacy-example": "dev-symfony-integration",
+    },
+    ...
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:cvuorinen/legacy-example.git"
+        }
+    ]
+}
+                    </code></pre>
+
+                    <aside class="notes">
+                        Works with private repos also
+                    </aside>
+                </section>
+
+                <section>
+                    <h1>Assets</h1>
+                    <ul>
+                        <li><em>Goal:</em> legacy works without modification &amp;  easy to deploy</li>
+                        <li>Symlink legacy asset directories from Symfony <code>web/</code> dir</li>
+                    </ul>
+                    <pre class="shell">
+$ ls -l web/
+app_dev.php
+app.php
+config.php
+<em>css</em> -> ../legacy/css
+favicon.ico
+<em>images</em> -> ../legacy/images
+robots.txt</pre>
+                </section>
+
+                <section>
+                    <h2>Automate symlinks with composer scripts</h2>
+                    <br>
+                    <pre><code data-trim class="json">{
+    ...
+    "scripts": {
+        "post-install-cmd": [
+            ...
+            "Cvuorinen\\LegacyBundle\\Composer\\AssetSymlinks::create",
+        ],
+        "post-update-cmd": [
+            ...
+            "Cvuorinen\\LegacyBundle\\Composer\\AssetSymlinks::create",
+        ]
+    },
+    "extra": {
+        ...
+        "legacy-app-dir": "legacy",
+    }
+}</code></pre>
+                    <aside class="notes">
+                        Works with Capifony deployments for example
+                    </aside>
+                </section>
+
+                <section>
+                    <h1>Shared Authentication</h1>
+                    <br>
+                    <ul>
+                        <li><em>Goal:</em> User logs in once, authenticated for both legacy and Symfony app</li>
+                        <li>Alternatives:
+                        <ul>
+                            <li>Move Auth to Symfony side and refactor legacy code to use it</li>
+                            <li>Keep legacy Auth and create a Symfony wrapper for it</li>
+                        </ul></li>
+                    </ul>
+
+                    <aside class="notes">
+                        <ul>
+                            <li>Best method depends on legacy app</li>
+                            <li>Symfony custom Auth system involves many classes</li>
+                            <li>Might be easier and better to move auth to Symfony side and get security.context from container in legacy app</li>
+                        </ul>
+                    </aside>
+                </section>
+
+                <section>
+                    <h1>Custom Authentication Provider</h1>
+                    <br>
+                    <ul>
+                        <li>Just read values from session that legacy app assigned during login</li>
+                        <li>Custom Authentication Provider requires at least 6 classes</li>
+                        <li>The <code>SimplePreAuthenticatorInterface</code> was introduced in Symfony 2.4.</li>
+                        <li>More info in Symfony docs: <br>
+                            <small><a href="http://symfony.com/doc/current/cookbook/security/custom_authentication_provider.html">symfony.com/doc/current/cookbook/security/custom_authentication_provider.html</a></small><br>
+                            <small><a href="http://symfony.com/doc/current/cookbook/security/api_key_authentication.html">symfony.com/doc/current/cookbook/security/api_key_authentication.html</a></small></li>
+                    </ul>
+
+                    <aside class="notes">
+                        <ul>
+                            <li>Token, Listener, AuthenticationProvider, SecurityFactory, UserProvider, User</li>
+                            <li>SimplePreAuthenticatorInterface: just SimplePreAuthenticator &amp; UserProvider + User</li>
+                        </ul>
+                    </aside>
+                </section>
+
+                <section>
+                    <h1>Same layout and UI</h1>
+                    <br>
+                    <ul>
+                        <li><em>Goal:</em> both legacy and Symfony app look the same</li>
+                        <li>Create Twig base layout by copying from legacy</li>
+                        <li>Layout changes so rarely, it doesn't really matter that it's duplicated in two places</li>
+                        <li class="fragment">Problem: layout areas that have some logic
+                        <ul>
+                            <li>For example: navigation &amp; menus, user personalized info/actions</li>
+                            <li>We don't want to duplicate that logic</li>
+                        </ul></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1>Shared layout components</h1>
+                    <br>
+                    <ol>
+                        <li>Crawl legacy app from Symfony</li>
+                        <li>Load from legacy app by Symfony sub-request or ESI</li>
+                        <li>Port over to a Symfony service/Twig extension etc.</li>
+                    </ol>
+
+                    <aside class="notes">
+                        ESI=Edge Side Include <br>
+                        Might need some caching when making many separate requests
+                    </aside>
+                </section>
+
+                <section>
+                    TODO sub-request example
+                </section>
+
+                <section>
+                    <h1>Database access</h1>
+                    <br>
+                    <ul>
+                        <li><em>Goal:</em> both legacy and Symfony apps use the same database</li>
+                        <li>Symfony side uses Doctrine ORM</li>
+                        <li class="fragment">Map database tables as Doctrine Entities
+                        <ul>
+                            <li>Only when needed</li>
+                            <li>Use meaningful names in the Entity</li>
+                        </ul></li>
+                    </ul>
+
+                    <aside class="notes">
+                        <ul>
+                            <li>Entity &amp; field names do not have to be same as database table/column</li>
+                            <li>Can rename in database after not used in legacy anymore</li>
+                        </ul>
+                    </aside>
+                </section>
+
+                <section>
+                    <h2>config.yml</h2>
+                    <pre><code data-trim class="yml">
+...
+doctrine:
+    dbal:
+        ...
+        schema_filter: ~^(?!(^some_table$)|(^stuff$) &#9166;
+                           |(^super_secret_admin_stuff$) &#9166;
+                           ... # many, many tables here
+                           (^last_table$))~
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h1>Example Code in GitHub</h1>
+                    <br>
+                    <ul>
+                        <li class="repo-link">
+                        <i class="fa fa-book fa-lg"></i>
+                        <a href="https://github.com/cvuorinen">cvuorinen</a> / 
+                        <strong><a href="https://github.com/cvuorinen/symfony-legacy-example">symfony-legacy-example</a></strong>
+                        <ul>
+                            <li>Branches &amp; tags for different stages of integration</li>
+                        </ul></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1>Thank you <img class="text-middle" src="img/symfonyse_901.png" alt="">!</h1>
+                    <br>
+                    <table width="100%">
+                        <tr>
+                            <td width="50%">
+                                <h2>Please leave feedback <br>
+                                at <img class="text-middle" height="40" src="img/joindin-logo.png" alt=""></h2>
+                                <img src="img/qrcode.png" alt="">
+                                <h3 style="margin-left:25px;"><a href="https://joind.in/12538" target="_blank">joind.in/12538</a></h3>
+                            </td>
+                            <td class="follow-me">
+                                <br><br><br><br><br>
+                                <h3>
+                                    <span class="fa-stack"><i class="fa fa-lg fa-twitter"></i></span>
+                                    <a href="http://twitter.com/cvuorinen" target="_blank">@cvuorinen</a>
+                                </h3>
+                                <h3>
+                                    <span class="fa-stack"><i class="fa fa-lg fa-github"></i></span>
+                                    <a href="https://github.com/cvuorinen" target="_blank">cvuorinen</a>
+                                </h3>
+                                <h3>
+                                    <span class="fa-stack"><i class="fa fa-lg fa-home"></i></span>
+                                    <a href="http://cvuorinen.net" target="_blank">cvuorinen.net</a>
+                                </h3>
+                            </td>
+                        </tr>
+                    </table>
+                </section>
+
+            </div>
+
+        </div>
+
+        <footer>
+            <script src="js/sf-debug-toolbar.js"></script>
+        </footer>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.min.js"></script>
+
+        <script>
+
+            // Full list of configuration options available here:
+            // https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                controls: true,
+                progress: true,
+                history: true,
+                center: true,
+
+                //theme: 'simple', // available themes are in /css/theme
+                transition: 'fade', // default/cube/page/concave/zoom/linear/fade/none
+                transitionSpeed: 'default', // default/fast/slow
+
+                // Parallax scrolling
+                // parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+                // parallaxBackgroundSize: '2100px 900px',
+
+                // Optional libraries used to extend on reveal.js
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    /*{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },*/
+                    { src: 'plugin/highlight/highlight.pack.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+                    { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+                ]
+            });
+
+        </script>
+
+    </body>
+</html>
