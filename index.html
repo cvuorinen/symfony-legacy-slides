@@ -572,13 +572,25 @@ robots.txt</pre>
                     </ol>
 
                     <aside class="notes">
-                        ESI=Edge Side Include <br>
-                        Might need some caching when making many separate requests
+                        <ul>
+                            <li>ESI=Edge Side Include</li>
+                            <li>Might need some caching when making many separate requests</li>
+                            <li>Sub-requests don't work without a Symfony route</li>
+                        </ul>
                     </aside>
                 </section>
 
                 <section>
-                    TODO sub-request example
+                    <h2>Symfony sub-request in <code>layout.html.twig</code></h2>
+                    <pre><code data-trim class="twig">
+...
+        &lt;div id="sidebar"&gt;
+            {% block sidebar %}
+                {{ render(url('_legacy', {filename: 'menu'})) }}
+            {% endblock %}
+        &lt;/div&gt;
+...
+                    </code></pre>
                 </section>
 
                 <section>
@@ -613,6 +625,105 @@ doctrine:
                            |(^super_secret_admin_stuff$) &#9166;
                            ... # many, many tables here
                            (^last_table$))~
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h1>Part 1: Symfony integration</h1>
+                    <br>
+                    <ul class="no-bullets check">
+                        <li><i class="fa fa-check fa-lg"></i> Same layout and UI</li>
+                        <li><i class="fa fa-check fa-lg"></i> Shared authentication
+                        <ul>
+                            <li><i class="fa fa-check"></i> User only logs in once</li>
+                        </ul></li>
+                        <li><i class="fa fa-check fa-lg"></i> Shared configuration
+                        <ul>
+                            <li><i class="fa fa-check"></i> Parameters only defined in one place</li>
+                        </ul></li>
+                        <li><i class="fa fa-check fa-lg"></i> Easy for developers to work with and deploy</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1>Part 2: Refactoring legacy</h1>
+                    <br>
+                    <ul>
+                        <li>Gradual migration
+                        <ul>
+                            <li>Smoothly migrate old code over time</li>
+                        </ul></li>
+                        <li class="fragment">Don't try to do too much at once</li>
+                        <li class="fragment">Write tests!</li>
+                        <li class="fragment"><i class="fa fa-quote-left"></i>Perfect is the enemy of better.<i class="fa fa-quote-right"></i></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1>Write tests</h1>
+                    <br>
+                    <ul>
+                        <li>Unit &amp; functional tests if you can</li>
+                        <li>If your legacy project is immune to unit testing, <br>write <strong>characterization tests</strong>
+                        <ul>
+                            <li class="fragment">"a characterization test is a means to describe (characterize) the actual behavior of an existing piece of software, and therefore protect existing behavior of legacy code..."<br>
+                            <a href="http://en.wikipedia.org/wiki/Characterization_test">en.wikipedia.org/wiki/Characterization_test</a></li>
+                        </ul></li>
+                    </ul>
+
+                    <aside class="notes">
+                        Selenium etc. or even Symfony WebTestCase <br>
+                        Symfony test env database credentials &amp; fixtures
+                    </aside>
+                </section>
+
+                <section>
+                    <h1>Database access</h1>
+                    <br>
+                    <ul>
+                        <li>Move raw database queries to doctrine repositories</li>
+                        <li>Get repository object from container in legacy app</li>
+                        <li></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>UserRepository.php</h2>
+                    <pre><code data-trim class="php">
+use Doctrine\DBAL\Connection;
+
+class UserRepository
+{
+    /**
+     * @param Connection $connection
+     */
+    public function __construct(Connection $connection) {}
+
+    /**
+     * @return array
+     */
+    public function fetchAll() {}
+
+    /**
+     * @param int $userId
+     *
+     * @return array
+     */
+    public function findById($userId) {}
+}</code></pre>
+                </section>
+
+                <section>
+                    <h2>Legacy <code>functions.php</code> etc.</h2>
+                    <pre><code data-trim class="php">
+function getUserName($id)
+{
+    $userRepo = $GLOBALS['container']
+                ->get('cvuorinen.example.repository.user');
+    $user = $userRepo->findById($id);
+
+    return $user->name;
+}
                     </code></pre>
                 </section>
 

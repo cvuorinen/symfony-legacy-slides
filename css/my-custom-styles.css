@@ -98,6 +98,17 @@ body {
 .reveal section > ul > li:only-child {
     list-style-type: none;
 }
+.reveal ul.no-bullets {
+    list-style: none;
+}
+.reveal ul.no-bullets li ul > li:before {
+    content: "";
+    margin-left: 0;
+    left: 0;
+}
+.reveal .check .fa {
+    color: #759e1a;
+}
 
 .reveal strong {
     color: #313131;
@@ -222,6 +233,11 @@ pre.shell {
 }
 .reveal *.fa-stack-2x {
     font-size: 2em;
+}
+.reveal .fa-quote-left,
+.reveal .fa-quote-right {
+    color: #aaa;
+    margin: 0 10px;
 }
 
 /* Symfony logo */
