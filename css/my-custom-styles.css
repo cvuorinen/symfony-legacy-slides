@@ -121,6 +121,21 @@ body {
     font-style: normal;
 }
 
+.reveal section mark {
+    display: inline-block;
+    padding: 0 3px;
+    margin: 0 -3px;
+    background-color: rgba(255, 245, 0, .5);
+    box-shadow: 3px 0 0 rgba(255, 245, 0, .5), -3px 0 0 rgba(255, 245, 0, .5);
+    border-radius: 6px;
+    line-height: 1.2;
+}
+
+.reveal section mark.success {
+    background-color: rgba(170, 225, 78, .5);
+    box-shadow: 3px 0 0 rgba(170, 225, 78, .5), -3px 0 0 rgba(170, 225, 78, .5);
+}
+
 .reveal h1 em {
     font-weight: normal;
 }
@@ -152,6 +167,16 @@ body {
 }
 .reveal .repo-link a {
     text-decoration: none;
+}
+
+.reveal .books {
+    width: 100%;
+}
+.reveal .books td {
+    width: 50%;
+}
+.reveal .books td img {
+    height: 260px;
 }
 
 .reveal .follow-me a {
@@ -234,10 +259,24 @@ pre.shell {
 .reveal *.fa-stack-2x {
     font-size: 2em;
 }
+
+.reveal .quote {
+    position: relative;
+    display: inline-block;
+    margin: 0 50px;
+}
 .reveal .fa-quote-left,
 .reveal .fa-quote-right {
-    color: #aaa;
-    margin: 0 10px;
+    position: absolute;
+    color: #ccc;
+}
+.reveal .fa-quote-left {
+    left: -40px;
+    top: -10px;
+}
+.reveal .fa-quote-right {
+    right: -40px;
+    bottom: -10px;
 }
 
 /* Symfony logo */
@@ -271,5 +310,31 @@ pre.shell {
 
 .reveal .text-exception {
     float: left;
+    position: relative;
+    width: 550px;
     padding: 30px 44px 24px 46px;
+}
+
+.reveal .text-exception h2 {
+    font-size: 24px;
+}
+
+.reveal .text-exception .fa-quote-left {
+    position: absolute;
+    top: 0;
+    left: -20px;
+}
+
+.reveal .text-exception .fa-quote-right {
+    position: absolute;
+    bottom: 0;
+    right: 20px;
+}
+
+.reveal .block-exception small {
+    font-size: 12px;
+}
+.reveal .block-exception abbr {
+    border-bottom: 1px dotted #000;
+    cursor: help;
 }

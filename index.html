@@ -62,17 +62,10 @@
 
                 <section>
                     <h1>Legacy</h1>
-                    <img src="img/thread.jpg" alt="">
+                    <img src="img/thread.jpg" alt="" height="400">
                     <div>Image by <a href="http://www.leunig.com.au/" target="_blank">Michael Leunig</a></div>
                 </section>
-<!--
-                <section class="block-exception">
-                    <div class="illustration-exception"></div>
-                    <div class="text-exception">
-                        <h2>Some Exception test</h2>
-                    </div>
-                </section>
--->
+
                 <section>
                     <h1>Full rewrite</h1>
                     <br>
@@ -123,6 +116,33 @@
                 </section>
 
                 <section>
+                    <h1>Alternatives</h1>
+                    <br>
+                    <ol>
+                        <li>Totally separate applications, using same database
+                        <ul>
+                            <li>Running on the same server, but different doc root</li>
+                            <li>Web server handles routing (subdomain etc.)</li>
+                        </ul></li>
+                        <li>Use Symfony components inside the legacy app</li>
+                        <li>Run legacy app through Symfony fullstack framework
+                        <ul>
+                            <li>Write new features into Symfony bundles</li>
+                            <li>Integrate legacy app with Symfony</li>
+                        </ul></li>
+                    </ol>
+
+                    <aside class="notes">
+                        <ol>
+                            <li>can use different versions of PHP, nginx has pretty good options for routing</li>
+                            <li>Requires some bootstrapping to get everything set up,
+                                might be OK if legacy app has a decent framework to begin with</li>
+                            <li>PHP upgrade if &lt; 5.3</li>
+                        </ol>
+                    </aside>
+                </section>
+
+                <section>
                     <h1>Introducing reference project</h1>
                     <br>
                     <ul>
@@ -133,7 +153,9 @@
                         <li class="fragment">Lots of different developers over the years</li>
                         <li class="fragment">116 748 LOC</li>
                         <li class="fragment">No tests</li>
-                        <li class="fragment">Let's look at some code</li>
+                    </ul>
+                    <ul class="fragment">
+                        <li><i class="fa fa-hand-o-right"></i> Let's look at some code</li>
                     </ul>
                 </section>
 
@@ -176,6 +198,9 @@ switch ($page) {
         break;
     // ... ~1500 lines more
 }</code></pre>
+                    <aside class="notes">
+                        Legacy URL scheme (/user.html /page2.html)
+                    </aside>
                 </section>
 
                 <section>
@@ -200,56 +225,17 @@ class User extends Db
                 </section>
 
                 <section>
-                    <h1>Alternatives</h1>
-                    <br>
-                    <ol>
-                        <li>Totally separate applications, using same database
-                        <ul>
-                            <li>Running on the same server, but different doc root</li>
-                            <li>Web server handles routing (subdomain etc.)</li>
-                        </ul></li>
-                        <li>Use Symfony components inside the legacy app</li>
-                        <li>Run legacy app through Symfony fullstack framework</li>
-                    </ol>
+                    <h2>Forward non-Symfony routes to legacy</h2>
+                    <img class="fragment" src="img/symfony_legacykernellistener.png" alt="">
 
                     <aside class="notes">
-                        <ol>
-                            <li>can use different versions of PHP, nginx has pretty good options for routing</li>
-                            <li>Requires some bootstrapping to get everything set up,
-                                might be OK if legacy app has a decent framework to begin with</li>
-                            <li>PHP upgrade if &lt; 5.3</li>
-                        </ol>
-                    </aside>
-                </section>
-
-                <section>
-                    <h1>Run legacy app through Symfony</h1>
-                    <br>
-                    <ul>
-                        <li>Write new features into Symfony bundles</li>
-                        <li>Forward non-Symfony routes to legacy app</li>
-                        <li>Integrate legacy app with Symfony
                         <ul>
-                            <li>Use Symfony components in legacy app</li>
-                            <li>Use new code written in Symfony bundles in legacy app</li>
-                        </ul></li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h1>Forward non-Symfony routes to legacy app</h1>
-                    <br>
-                    <ul>
-                        <li>Use Symfony kernel events</li>
-                        <li>LegacyKernel + LegacyKernelListener</li>
-                        <li>Include legacy "front controller"</li>
-                        <li>Capture output and return in a Response object</li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h2>Legacy Request lifecycle</h2>
-                    <img src="img/symfony_legacykernellistener.png" alt="">
+                            <li>Use Symfony kernel events</li>
+                            <li>LegacyKernel + LegacyKernelListener</li>
+                            <li>Include legacy "front controller"</li>
+                            <li>Capture output and return in a Response object</li>
+                        </ul>
+                    </aside>
                 </section>
 
                 <section>
@@ -340,27 +326,6 @@ class LegacyController extends Controller
                 </section>
 
                 <section>
-                    <h2>Test Route with <code>router:match</code></h2>
-                    <br>
-                    <pre class="shell">
-$ app/console router:match /index.php
-Route "_legacy" matches
-
-[router] Route "_legacy"
-Name         _legacy
-Path         /{filename}.php
-Host         ANY
-Scheme       ANY
-Method       ANY
-Class        Symfony\Component\Routing\Route
-Defaults     _controller: CvuorinenLegacyBundle:Legacy:legacy
-Requirements 
-Options      compiler_class: Symfony\Component\Routing\RouteCompiler
-Path-Regex   #^/(?P&lt;filename&gt;[^/\.]++)\.php$#s
-                    </pre>
-                </section>
-
-                <section>
                     <h1>There's a bundle for that</h1>
                     <br>
                     <ul>
@@ -383,15 +348,15 @@ Path-Regex   #^/(?P&lt;filename&gt;[^/\.]++)\.php$#s
 
                 <section>
                     <h1>Integrate legacy app with Symfony</h1>
-                    <br>
                     <ul>
-                        <li><em>Goal:</em> Use Symfony services in legacy app</li>
+                        <li><em>Goal:</em> Use Symfony services and parameters in legacy app</li>
                         <li>Assign <strong>Request &amp; Service Container</strong> <br>
                             to a variable <strong>in legacy scope</strong></li>
-                        <li class="fragment">Get any Service or Parameter from the container in legacy app
+                        <li class="fragment">Get services &amp; parameters from the container in legacy app
                         <ul>
                             <li>Any Symfony component or Symfony framework built-in service</li>
                             <li>Any custom service written in Symfony bundles</li>
+                            <li>Any configuration parameters from <code>parameters.yml</code></li>
                         </ul></li>
                     </ul>
                 </section>
@@ -418,13 +383,34 @@ class LegacyKernel implements HttpKernelInterface
                 </section>
 
                 <section>
-                    <h1>Configuration</h1>
-                    <br>
-                    <ul>
-                        <li><em>Goal:</em> DRY (configuration defined in only one place)</li>
-                        <li>Move legacy configuration to Symfony <code>parameters.yml</code></li>
-                        <li>Get parameters from container in legacy side</li>
-                    </ul>
+                    <h2>Legacy <code>index.php</code></h2>
+                    <pre><code data-trim class="php">
+// Make Symfony Container and Request global
+// so they can be used in other functions & classes
+
+/** @var \Symfony\Component\DependencyInjection\Container $container */
+$GLOBALS['container'] = $container;
+
+/** @var \Symfony\Component\HttpFoundation\Request $request */
+$GLOBALS['request'] = $request;
+                    </code></pre>
+                </section>
+
+                <section class="block-exception">
+                    <div class="illustration-exception"></div>
+                    <div class="text-exception">
+                        <h2>
+                            <i class="fa fa-quote-left"></i>
+                            Exception detected! Global container!! OMG!!1!
+                            <i class="fa fa-quote-right"></i>
+                        </h2>
+                        <small><strong>500</strong> Internal Server Conflict - <abbr>RuntimeOmgException</abbr></small>
+                    </div>
+                    <div style="clear:both;"></div>
+                    <br><br><br><br><br><br><br>
+                    <center>
+                    <h2 class="fragment quote"><i class="fa fa-quote-left"></i>Perfect is the enemy of better.<i class="fa fa-quote-right"></i></h2>
+                    </center>
                 </section>
 
                 <section>
@@ -507,6 +493,58 @@ robots.txt</pre>
                 </section>
 
                 <section>
+                    <h1>Same layout and UI</h1>
+                    <br>
+                    <ul>
+                        <li><em>Goal:</em> both legacy and Symfony app look the same</li>
+                        <li>Create Twig base layout by copying from legacy</li>
+                        <li>Layout changes so rarely, it doesn't really matter that it's duplicated in two places</li>
+                        <li class="fragment">Problem: layout areas that have some logic
+                        <ul>
+                            <li>For example: navigation &amp; menus, user personalized info/actions</li>
+                            <li>We don't want to duplicate that logic</li>
+                        </ul></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h1>Shared layout components</h1>
+                    <br>
+                    <h2>Alternatives</h2>
+                    <ol>
+                        <li>Crawl legacy app from Symfony</li>
+                        <li>Load from legacy app by Symfony sub-request or ESI</li>
+                        <li>Port over to a Symfony service/Twig extension etc.</li>
+                    </ol>
+
+                    <aside class="notes">
+                        <ul>
+                            <li>ESI=Edge Side Include</li>
+                            <li>Might need some caching when making many separate requests</li>
+                            <li>Sub-requests don't work without a Symfony route</li>
+                            <li>Can't call die/exit inside sub-request</li>
+                        </ul>
+                    </aside>
+                </section>
+
+                <section>
+                    <h2>Symfony sub-request in <code>layout.html.twig</code></h2>
+                    <pre><code data-trim class="twig">
+...
+&lt;div id="sidebar"&gt;
+    {% block sidebar %}
+        {{ render(url('_legacy', {filename: 'menu'})) }}
+    {% endblock %}
+&lt;/div&gt;
+...
+                    </code></pre>
+
+                    <aside class="notes">
+                        Symfony router can be used in the legacy side to generate URLs 
+                    </aside>
+                </section>
+
+                <section>
                     <h1>Shared Authentication</h1>
                     <br>
                     <ul>
@@ -548,52 +586,6 @@ robots.txt</pre>
                 </section>
 
                 <section>
-                    <h1>Same layout and UI</h1>
-                    <br>
-                    <ul>
-                        <li><em>Goal:</em> both legacy and Symfony app look the same</li>
-                        <li>Create Twig base layout by copying from legacy</li>
-                        <li>Layout changes so rarely, it doesn't really matter that it's duplicated in two places</li>
-                        <li class="fragment">Problem: layout areas that have some logic
-                        <ul>
-                            <li>For example: navigation &amp; menus, user personalized info/actions</li>
-                            <li>We don't want to duplicate that logic</li>
-                        </ul></li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h1>Shared layout components</h1>
-                    <br>
-                    <ol>
-                        <li>Crawl legacy app from Symfony</li>
-                        <li>Load from legacy app by Symfony sub-request or ESI</li>
-                        <li>Port over to a Symfony service/Twig extension etc.</li>
-                    </ol>
-
-                    <aside class="notes">
-                        <ul>
-                            <li>ESI=Edge Side Include</li>
-                            <li>Might need some caching when making many separate requests</li>
-                            <li>Sub-requests don't work without a Symfony route</li>
-                        </ul>
-                    </aside>
-                </section>
-
-                <section>
-                    <h2>Symfony sub-request in <code>layout.html.twig</code></h2>
-                    <pre><code data-trim class="twig">
-...
-        &lt;div id="sidebar"&gt;
-            {% block sidebar %}
-                {{ render(url('_legacy', {filename: 'menu'})) }}
-            {% endblock %}
-        &lt;/div&gt;
-...
-                    </code></pre>
-                </section>
-
-                <section>
                     <h1>Database access</h1>
                     <br>
                     <ul>
@@ -632,15 +624,11 @@ doctrine:
                     <h1>Part 1: Symfony integration</h1>
                     <br>
                     <ul class="no-bullets check">
+                        <li><i class="fa fa-check fa-lg"></i> Legacy requests go through Symfony</li>
+                        <li><i class="fa fa-check fa-lg"></i> Symfony service container in legacy</li>
+                        <li><i class="fa fa-check fa-lg"></i> Shared configuration</li>
                         <li><i class="fa fa-check fa-lg"></i> Same layout and UI</li>
-                        <li><i class="fa fa-check fa-lg"></i> Shared authentication
-                        <ul>
-                            <li><i class="fa fa-check"></i> User only logs in once</li>
-                        </ul></li>
-                        <li><i class="fa fa-check fa-lg"></i> Shared configuration
-                        <ul>
-                            <li><i class="fa fa-check"></i> Parameters only defined in one place</li>
-                        </ul></li>
+                        <li><i class="fa fa-check fa-lg"></i> Shared authentication</li>
                         <li><i class="fa fa-check fa-lg"></i> Easy for developers to work with and deploy</li>
                     </ul>
                 </section>
@@ -655,7 +643,6 @@ doctrine:
                         </ul></li>
                         <li class="fragment">Don't try to do too much at once</li>
                         <li class="fragment">Write tests!</li>
-                        <li class="fragment"><i class="fa fa-quote-left"></i>Perfect is the enemy of better.<i class="fa fa-quote-right"></i></li>
                     </ul>
                 </section>
 
@@ -681,50 +668,140 @@ doctrine:
                     <h1>Database access</h1>
                     <br>
                     <ul>
-                        <li>Move raw database queries to doctrine repositories</li>
+                        <li><em>Goal:</em> Separate database access from business logic</li>
+                        <li>Move database queries to Repository classes</li>
+                        <li>Can be Doctrine Entity repository but doesn't need to be</li>
                         <li>Get repository object from container in legacy app</li>
-                        <li></li>
                     </ul>
                 </section>
 
                 <section>
                     <h2>UserRepository.php</h2>
                     <pre><code data-trim class="php">
-use Doctrine\DBAL\Connection;
-
-class UserRepository
+class UserRepository extends EntityRepository
 {
     /**
-     * @param Connection $connection
+     * @param User $user
      */
-    public function __construct(Connection $connection) {}
-
-    /**
-     * @return array
-     */
-    public function fetchAll() {}
-
-    /**
-     * @param int $userId
-     *
-     * @return array
-     */
-    public function findById($userId) {}
+    public function save(User $user)
+    {
+        $this->_em->persist($user);
+        $this->_em->flush();
+    }
 }</code></pre>
                 </section>
 
                 <section>
                     <h2>Legacy <code>functions.php</code> etc.</h2>
+                    <br>
+                    <h2><mark>Before</mark></h2>
                     <pre><code data-trim class="php">
-function getUserName($id)
+function getUsername($id)
 {
-    $userRepo = $GLOBALS['container']
-                ->get('cvuorinen.example.repository.user');
-    $user = $userRepo->findById($id);
+    $sql = "SELECT username FROM user WHERE id=" . (int)$id;
+    $result = mysql_fetch_array(mysql_query($sql));
 
-    return $user->name;
-}
-                    </code></pre>
+    return $result[0];
+}</code></pre>
+                </section>
+
+                <section>
+                    <h2>Legacy <code>functions.php</code> etc.</h2>
+                    <br>
+                    <h2><mark class="success">After</mark></h2>
+                    <pre><code data-trim class="php">
+function getUsername($id)
+{
+    global $container;
+    $userRepository = $container->get('acme.demo.repository.user');
+    $user = $userRepository->find($id);
+
+    return $user->getUsername();
+}</code></pre>
+                </section>
+
+                <section>
+                    <h1>View templates</h1>
+                    <br>
+                    <ul>
+                        <li><em>Goal:</em> Decouple presentation logic from business logic</li>
+                        <li>Create Twig templates in a Symfony bundle</li>
+                        <li>Get Twig service from container in legacy app</li>
+                        <li>Render template and pass in variables</li>
+                    </ul>
+
+                    <aside class="notes">
+                        First separate all presentation logic in the original context by moving it down, then extract to template
+                    </aside>
+                </section>
+
+                <section>
+                    <h2>Legacy <code>user.php</code> etc.</h2>
+                    <br>
+                    <h2><mark>Before</mark></h2>
+                    <pre><code data-trim class="php">
+function userInfo()
+{
+    $html = '&lt;p&gt;&lt;strong&gt;Id:&lt;/strong&gt; ' . $this-&gt;keyvalue . '&lt;/p&gt;';
+    $html .= '&lt;p&gt;&lt;strong&gt;Name:&lt;/strong&gt; ' . $this-&gt;firstname . ' '
+           . $this-&gt;lastname . '&lt;/p&gt;';
+    if (isAdmin()) {
+        $html .= '&lt;h3&gt;Actions:&lt;/h3&gt;';
+        $html .= '&lt;a href="' . $baseUrl
+               . '?action=edit&page=/user.html"&gt;Edit&lt;/a&gt;';
+    }
+
+    return $html;
+}</code></pre>
+                </section>
+
+                <section>
+                    <h2><code>views/User/info.html.twig</code></h2>
+                    <br>
+                    <pre><code data-trim class="php">
+{% extends "CvuorinenLegacyBundle::layout.html.twig" %}
+
+{% block body %}
+    &lt;p&gt;&lt;strong&gt;Id:&lt;/strong&gt; {{ user.id }}&lt;/p&gt;
+    &lt;p&gt;&lt;strong&gt;Name:&lt;/strong&gt;
+        {{ user.firstname }} {{ user.lastname }}&lt;/p&gt;
+    {% if isAdmin %}
+        &lt;h3&gt;Actions:&lt;/h3&gt;
+        &lt;a href="{{ baseUrl }}?action=edit&page=/user.html"&gt;Edit&lt;/a&gt;
+    {% endif %}
+{% endblock %}
+</code></pre>
+                </section>
+
+                <section>
+                    <h2>Legacy <code>user.php</code> etc.</h2>
+                    <br>
+                    <h2><mark class="success">After</mark></h2>
+                    <pre><code data-trim class="php">
+function userInfo()
+{
+    $data = [
+        'user' => $this->user,
+        'isAdmin' => isAdmin(),
+        'baseUrl' => $baseUrl
+    ];
+
+    return $this->twig->render(
+        'CvuorinenLegacyBundle:User:info.html.twig',
+        $data
+    );
+}</code></pre>
+                </section>
+
+                <section>
+                    <h1>Domain logic</h1>
+                    <br>
+                    <ul>
+                        <li><em>Goal:</em> separate domain logic from controller logic</li>
+                        <li>Create domain objects, service classes, events etc. <br>for domain logic</li>
+                        <li>Only thing left should be controller logic</li>
+                        <li>Finally move controller logic to a controller in Symfony side &amp; add routes</li>
+                    </ul>
                 </section>
 
                 <section>
@@ -736,9 +813,27 @@ function getUserName($id)
                         <a href="https://github.com/cvuorinen">cvuorinen</a> / 
                         <strong><a href="https://github.com/cvuorinen/symfony-legacy-example">symfony-legacy-example</a></strong>
                         <ul>
-                            <li>Branches &amp; tags for different stages of integration</li>
+                            <li>Branches, tags  &amp; PRs for different stages of integration</li>
                         </ul></li>
                     </ul>
+                </section>
+
+                <section>
+                    <h1>Book recommendations</h1>
+                    <table class="books">
+                        <tr>
+                            <td>
+                                <img src="img/a-year-with-symfony.jpg" alt=""><br><br>
+                                <h2><a href="https://leanpub.com/a-year-with-symfony">A Year With Symfony</a></h2>
+                                <div>by <strong>Matthias Noback</strong></div>
+                            </td>
+                            <td>
+                                <img src="img/mlaphp.png" alt=""><br><br>
+                                <h2><a href="https://leanpub.com/mlaphp">Modernizing Legacy <br>Applications In PHP</a></h2>
+                                <div>by <strong>Paul M. Jones</strong></div>
+                            </td>
+                        </tr>
+                    </table>
                 </section>
 
                 <section>
