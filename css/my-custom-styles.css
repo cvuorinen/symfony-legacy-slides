@@ -142,6 +142,7 @@ body {
 
 .reveal a {
     color: #08c;
+    text-decoration: none;
 }
 .reveal a:hover {
     text-decoration: underline;
